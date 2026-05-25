@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZeroTier</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 880px; margin: 2rem auto; padding: 0 1rem; color: #1f2328; background: #fff; }
+    h1 { margin: 0 0 0.25rem; }
+    h3 { margin: 0 0 0.75rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #57606a; }
+    .muted { color: #6e7681; }
+    .card { border: 1px solid #d0d7de; border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; background: #f6f8fa; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #eaeef2; font-size: 0.95rem; vertical-align: top; }
+    th { background: #eaeef2; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+    input[type=text] { padding: 0.5rem 0.7rem; border: 1px solid #d0d7de; border-radius: 6px; font-size: 1rem; width: 280px; font-family: ui-monospace, monospace; }
+    button { padding: 0.55rem 1rem; border: 0; border-radius: 6px; background: #ffb000; color: #1f2328; cursor: pointer; font-size: 0.95rem; font-weight: 600; }
+    button:hover { filter: brightness(0.95); }
+    button.leave { background: #cf222e; color: #fff; padding: 0.3rem 0.7rem; font-size: 0.85rem; font-weight: 500; }
+    .pill { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 12px; font-size: 0.8rem; font-weight: 500; }
+    .pill.ok { background: #dafbe1; color: #116329; }
+    .pill.bad { background: #ffebe9; color: #82071e; }
+    .pill.wait { background: #fff8c5; color: #6b5800; }
+    form.inline { display: inline; margin: 0; }
+  </style>
+</head>
+<body>
+  <h1>ZeroTier</h1>
+  <p class="muted">Peer-to-peer mesh VPN</p>
+
+  {% if not ready %}
+    <div class="card">
+      <p><span class="pill wait">Starting</span> &nbsp;The ZeroTier daemon is initialising. This page will refresh shortly.</p>
+    </div>
+  {% else %}
+    <div class="card">
+      <p style="margin: 0;">
+        Node ID: <code>{{ status.address }}</code>
+        &nbsp;&middot;&nbsp;
+        {% if status.online %}<span class="pill ok">Online</span>{% else %}<span class="pill bad">Offline</span>{% endif %}
+        &nbsp;&middot;&nbsp;
+        Version <code>{{ status.version }}</code>
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Joined networks</h3>
+      {% if networks %}
+      <table>
+        <thead>
+          <tr><th>Network ID</th><th>Name</th><th>Status</th><th>Assigned IPs</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for n in networks %}
+          <tr>
+            <td><code>{{ n.id }}</code></td>
+            <td>{{ n.name or "" }}</td>
+            <td>
+              {% if n.status == "OK" %}<span class="pill ok">OK</span>
+              {% elif n.status == "REQUESTING_CONFIGURATION" %}<span class="pill wait">Awaiting authorisation</span>
+              {% elif n.status == "ACCESS_DENIED" %}<span class="pill bad">Access denied</span>
+              {% else %}<span class="pill bad">{{ n.status }}</span>{% endif %}
+            </td>
+            <td>{% for ip in n.assignedAddresses %}<code>{{ ip }}</code><br>{% endfor %}</td>
+            <td>
+              <form class="inline" method="post" action="/leave/{{ n.id }}" onsubmit="return confirm('Leave network {{ n.id }}?');">
+                <button class="leave" type="submit">Leave</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted" style="margin: 0;">No networks joined yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>Join a network</h3>
+      <form method="post" action="/join">
+        <input type="text" name="network_id" placeholder="16-character network ID" maxlength="16" required pattern="[0-9a-fA-F]{16}" autocomplete="off">
+        <button type="submit">Join</button>
+      </form>
+      <p class="muted" style="margin: 0.75rem 0 0;">
+        Find your network ID at <a href="https://my.zerotier.com" target="_blank" rel="noopener">my.zerotier.com</a> or on your self-hosted controller.
+        After joining, authorise this node from the controller UI.
+      </p>
+    </div>
+  {% endif %}
+
+  <script>
+    setInterval(() => {
+      const a = document.activeElement;
+      if (a && (a.tagName === "INPUT" || a.tagName === "BUTTON")) return;
+      location.reload();
+    }, 5000);
+  </script>
+</body>
+</html>

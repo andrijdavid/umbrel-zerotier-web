@@ -1,0 +1,34 @@
+[project]
+name = "umbrel-zerotier-web"
+version = "0.1.0"
+description = "Tiny FastAPI UI for joining and leaving ZeroTier networks from umbrelOS"
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<0.117",
+    "uvicorn[standard]>=0.32,<0.36",
+    "httpx>=0.27,<0.29",
+    "jinja2>=3.1,<4",
+    "python-multipart>=0.0.20,<0.1",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.7,<0.10"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["templates/*.html"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
