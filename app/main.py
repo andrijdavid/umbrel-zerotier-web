@@ -13,7 +13,7 @@ ZT_PORT = int(os.getenv("ZT_PORT", "9993"))
 ZT_AUTHTOKEN_PATH = Path(os.getenv("ZT_AUTHTOKEN_PATH", "/var/lib/zerotier-one/authtoken.secret"))
 
 app = FastAPI(title="ZeroTier")
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 
 def read_token() -> tuple[str | None, str | None]:
