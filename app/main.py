@@ -6,6 +6,7 @@ from urllib.parse import quote_plus
 import httpx
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 ZT_HOST = os.getenv("ZT_HOST", "127.0.0.1")
@@ -14,6 +15,7 @@ ZT_AUTHTOKEN_PATH = Path(os.getenv("ZT_AUTHTOKEN_PATH", "/var/lib/zerotier-one/a
 
 app = FastAPI(title="ZeroTier")
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
 
 def read_token() -> tuple[str | None, str | None]:
