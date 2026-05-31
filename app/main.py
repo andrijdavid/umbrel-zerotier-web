@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 ZT_HOST = os.getenv("ZT_HOST", "127.0.0.1")
 ZT_PORT = int(os.getenv("ZT_PORT", "9993"))
 ZT_AUTHTOKEN_PATH = Path(os.getenv("ZT_AUTHTOKEN_PATH", "/var/lib/zerotier-one/authtoken.secret"))
+ZT_AUTHTOKEN = os.getenv("ZT_AUTHTOKEN")  # pre-read by entrypoint as root; preferred at runtime
 
 app = FastAPI(title="ZeroTier")
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -19,6 +20,8 @@ app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")
 
 
 def read_token() -> tuple[str | None, str | None]:
+    if ZT_AUTHTOKEN:
+        return ZT_AUTHTOKEN, None
     try:
         return ZT_AUTHTOKEN_PATH.read_text().strip(), None
     except FileNotFoundError:
@@ -27,10 +30,7 @@ def read_token() -> tuple[str | None, str | None]:
             f"Auth token not found at {ZT_AUTHTOKEN_PATH}. ZeroTier daemon may still be starting.",
         )
     except PermissionError:
-        return None, (
-            f"Permission denied reading {ZT_AUTHTOKEN_PATH}. "
-            "The web container needs to run as root so it can read the daemon's 0600 token file."
-        )
+        return None, f"Permission denied reading {ZT_AUTHTOKEN_PATH}."
     except OSError as e:
         return None, f"Cannot read {ZT_AUTHTOKEN_PATH}: {e}"
 
