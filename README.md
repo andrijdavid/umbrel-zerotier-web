@@ -8,10 +8,10 @@ The image runs alongside the official `zerotier/zerotier` daemon, reads the daem
 
 The ZeroTier daemon binds its control plane to `127.0.0.1:9993` only, and its `authtoken.secret` file is `0600 root:root`. To work around both constraints without modifying the upstream image:
 
-- The web container shares the daemon container's network namespace (`network_mode: "service:zerotier"` in compose), so `127.0.0.1` resolves to the same loopback for both. Web reaches the daemon at `127.0.0.1:9993`.
-- The web container runs as root so it can read the daemon's 0600 token file from the shared `:ro` volume. The image is a small ASGI proxy on a private docker network behind umbrelOS's `app_proxy` auth, so the blast radius is bounded.
+- Both the daemon and the web container run with `network_mode: host`, so `127.0.0.1` is the same loopback for both. Web reaches the daemon at `127.0.0.1:9993`.
+- The web container runs as root so it can read the daemon's 0600 token file from the shared `:ro` volume, then drops to `PUID:PGID`. It is a small ASGI proxy behind umbrelOS's `app_proxy` auth, so the blast radius is bounded.
 
-A side effect of sharing the network namespace: the web container has no DNS entry of its own. The umbrelOS `app_proxy` therefore points at the daemon container's name (e.g. `zerotier_zerotier_1`) on port 8080.
+Because the web listens directly on the host under host networking, its port must be collision-free. Set `WEB_PORT` to the app's umbrelOS-reserved port (the `app_proxy` then points at `zerotier_web_1` on that port).
 
 ## Endpoints
 
@@ -29,6 +29,7 @@ A side effect of sharing the network namespace: the web container has no DNS ent
 | `ZT_HOST`            | `127.0.0.1`                                   |
 | `ZT_PORT`            | `9993`                                        |
 | `ZT_AUTHTOKEN_PATH`  | `/var/lib/zerotier-one/authtoken.secret`      |
+| `WEB_PORT`           | `8080`                                        |
 
 ## Local dev
 

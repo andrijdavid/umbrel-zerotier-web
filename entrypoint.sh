@@ -3,6 +3,7 @@ set -e
 
 PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
+WEB_PORT="${WEB_PORT:-8080}"
 
 # Read the daemon token as root before dropping privileges.
 # authtoken.secret is created by zerotier with mode 0600 (root-owned).
@@ -11,4 +12,4 @@ if [ -n "$ZT_AUTHTOKEN_PATH" ] && [ -f "$ZT_AUTHTOKEN_PATH" ]; then
     export ZT_AUTHTOKEN
 fi
 
-exec su-exec "${PUID}:${PGID}" "$@"
+exec su-exec "${PUID}:${PGID}" uvicorn app.main:app --host 0.0.0.0 --port "${WEB_PORT}"
